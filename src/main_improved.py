@@ -112,7 +112,7 @@ class AIDevOpsAgent:
             return {"type": "jira", "issue_key": issue_key}
         
         # Detect Java upgrade
-        java_match = re.search(r'(upgrade|update|migrate).*java.*(?:from\s+(?:version\s+)?)([\d]+).*(?:to\s+(?:version\s+)?)([\d]+)', prompt, re.IGNORECASE)
+        java_match = re.search(r'(upgrade|update|migrate).*java.*(?:from\s*)?([\d.]+).*(?:to\s*)?([\d.]+)', prompt, re.IGNORECASE)
         if java_match:
             from_version = java_match.group(2) if java_match.group(2) else "11"
             to_version = java_match.group(3) if java_match.group(3) else "21"
@@ -846,7 +846,7 @@ main
         print(f"   ✅ Created: {script_path}")
         
         # 3. Maven POM example
-        pom_path = workspace_path / f"pom.xml.java{to_ver}"
+        pom_path = workspace_path / "pom.xml.java{to_ver}"
         with open(pom_path, "w") as f:
             f.write(f"""<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -914,7 +914,7 @@ main
         print(f"   ✅ Created: {pom_path}")
         
         # 4. Gradle build.gradle example
-        gradle_path = workspace_path / f"build.gradle.java{to_ver}"
+        gradle_path = workspace_path / "build.gradle.java{to_ver}"
         with open(gradle_path, "w") as f:
             f.write(f"""plugins {{
     id 'java'
@@ -968,7 +968,7 @@ application {{
         print(f"   ✅ Created: {gradle_path}")
         
         # 5. Dockerfile for Java {to_ver}
-        dockerfile_path = workspace_path / f"Dockerfile.java{to_ver}"
+        dockerfile_path = workspace_path / "Dockerfile.java{to_ver}"
         with open(dockerfile_path, "w") as f:
             f.write(f"""# Multi-stage build for Java {to_ver}
 # Using Eclipse Temurin (recommended OpenJDK distribution)
