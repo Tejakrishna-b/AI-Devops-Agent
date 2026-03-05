@@ -23,11 +23,80 @@ class AIDevOpsAgent:
         auth = (self.jira_username, self.jira_token)
         response = requests.get(url, auth=auth)
         if response.status_code == 200:
-            print(f"Jira issue {issue_key} details: {response.json()}")
             return response.json()
         else:
-            print(f"Failed to fetch Jira issue: {response.text}")
+            print(f"❌ Failed to fetch Jira issue: {response.text}")
             return None
+
+    def explain_jira_issue(self, issue_data):
+        """Explain Jira issue in detail before proceeding with work"""
+        if not issue_data:
+            return None
+        
+        print("\n" + "="*70)
+        print("📋 JIRA TICKET ANALYSIS")
+        print("="*70)
+        
+        fields = issue_data.get("fields", {})
+        issue_key = issue_data.get("key", "Unknown")
+        
+        print(f"\n🎫 Ticket ID: {issue_key}")
+        print(f"📌 Summary: {fields.get('summary', 'N/A')}")
+        print(f"🏷️  Type: {fields.get('issuetype', {}).get('name', 'N/A')}")
+        print(f"⚠️  Priority: {fields.get('priority', {}).get('name', 'N/A')}")
+        print(f"📊 Status: {fields.get('status', {}).get('name', 'N/A')}")
+        
+        assignee = fields.get('assignee')
+        if assignee:
+            print(f"👤 Assignee: {assignee.get('displayName', 'N/A')}")
+        
+        reporter = fields.get('reporter')
+        if reporter:
+            print(f"👤 Reporter: {reporter.get('displayName', 'N/A')}")
+        
+        description = fields.get('description', '')
+        if description:
+            print(f"\n📝 Description:\n{description[:500]}..." if len(description) > 500 else f"\n📝 Description:\n{description}")
+        
+        # Extract requirements
+        print("\n🎯 Identified Requirements:")
+        requirements = self.extract_requirements(fields)
+        for i, req in enumerate(requirements, 1):
+            print(f"   {i}. {req}")
+        
+        print("\n" + "="*70)
+        print("🚀 PROCEEDING WITH AUTOMATED WORKFLOW")
+        print("="*70 + "\n")
+        
+        return requirements
+
+    def extract_requirements(self, fields):
+        """Extract actionable requirements from Jira ticket"""
+        requirements = []
+        summary = fields.get('summary', '').lower()
+        description = fields.get('description', '').lower()
+        
+        # Check for common upgrade patterns
+        if 'upgrade' in summary or 'upgrade' in description:
+            # Try to extract software and version
+            if 'sonarqube' in summary or 'sonarqube' in description:
+                requirements.append("Upgrade SonarQube to latest/specified version")
+            requirements.append("Update infrastructure configuration")
+            requirements.append("Test compatibility after upgrade")
+        
+        if 'infrastructure' in summary or 'infrastructure' in description:
+            requirements.append("Provision/update infrastructure with Terraform")
+        
+        if 'deployment' in summary or 'deployment' in description:
+            requirements.append("Deploy changes to specified environment")
+        
+        # If no specific requirements found, add general ones
+        if not requirements:
+            requirements.append("Analyze and implement requested changes")
+            requirements.append("Create necessary configuration files")
+            requirements.append("Prepare deployment artifacts")
+        
+        return requirements
 
     def create_github_branch(self, branch_name):
         import requests
@@ -37,14 +106,16 @@ class AIDevOpsAgent:
             return True
         
         # Get the default branch SHA
-        url = f"https://api.github.com/repos/{self.git_owner}/{self.git_repo.split('/')[-1]}/git/refs/heads/main"
+        repo_name = self.git_repo.split('/')[-1] if '/' in self.git_repo else self.git_repo
+        url = f"https://api.github.com/repos/{self.git_owner}/{repo_name}/git/refs/heads/main"
         headers = {"Authorization": f"token {self.git_token}", "Accept": "application/vnd.github.v3+json"}
         response = requests.get(url, headers=headers)
         
         if response.status_code == 200:
             sha = response.json()["object"]["sha"]
             # Create new branch
-            create_url = f"https://api.github.com/repos/{self.git_owner}/{self.git_repo.split('/')[-1]}/git/refs"
+            repo_name = self.git_repo.split('/')[-1] if '/' in self.git_repo else self.git_repo
+            create_url = f"https://api.github.com/repos/{self.git_owner}/{repo_name}/git/refs"
             data = {"ref": f"refs/heads/{branch_name}", "sha": sha}
             create_response = requests.post(create_url, json=data, headers=headers)
             if create_response.status_code == 201:
@@ -64,7 +135,8 @@ class AIDevOpsAgent:
             print("Note: Add GitHub token to config.yaml for real API calls")
             return True
         
-        url = f"https://api.github.com/repos/{self.git_owner}/{self.git_repo.split('/')[-1]}/pulls"
+        repo_name = self.git_repo.split('/')[-1] if '/' in self.git_repo else self.git_repo
+        url = f"https://api.github.com/repos/{self.git_owner}/{repo_name}/pulls"
         headers = {"Authorization": f"token {self.git_token}", "Accept": "application/vnd.github.v3+json"}
         data = {"title": title, "body": body, "head": branch_name, "base": "main"}
         response = requests.post(url, json=data, headers=headers)
@@ -140,13 +212,31 @@ class AIDevOpsAgent:
         return True
 
     def run_workflow(self, prompt):
-        print("--- AI DevOps Agent Workflow ---")
+        print("\n" + "="*70)
+        print("🤖 AI DEVOPS AGENT - AUTOMATED WORKFLOW")
+        print("="*70 + "\n")
+        
         analysis = self.analyze_prompt(prompt)
         if analysis["action"] == "unknown":
-            print("Could not determine action from prompt.")
+            print("❌ Could not determine action from prompt.")
             return
+        
+        # If Jira ticket, fetch and explain it first
         if "jira" in analysis:
-            self.get_jira_issue(analysis["jira"])
+            print("📥 Fetching Jira ticket details...\n")
+            issue_data = self.get_jira_issue(analysis["jira"])
+            if issue_data:
+                requirements = self.explain_jira_issue(issue_data)
+                # Ask for confirmation before proceeding
+                print("\n⏸️  Review the analysis above.")
+                response = input("\n👉 Proceed with automated workflow? (yes/no): ").strip().lower()
+                if response not in ['yes', 'y']:
+                    print("\n⛔ Workflow cancelled by user.")
+                    return
+            else:
+                print("\n⚠️  Could not fetch Jira details, proceeding with prompt analysis...\n")
+        
+        print("\n🔄 Starting automated DevOps workflow...\n")
         repos = self.locate_repositories()
         for repo in repos:
             branch = self.create_branch(repo)
@@ -154,10 +244,12 @@ class AIDevOpsAgent:
             self.add_code(repo, branch)
             self.commit_code(repo, branch)
             self.create_pull_request(repo, branch)
-            print("Waiting for developer review and merge...")
-            print("Code merged.")
+            print("\n⏳ Waiting for developer review and merge...")
+            print("✅ Code merged.")
             self.deploy(repo)
-        print("Workflow complete.")
+        print("\n" + "="*70)
+        print("✅ WORKFLOW COMPLETE")
+        print("="*70 + "\n")
 
 if __name__ == "__main__":
     agent = AIDevOpsAgent()

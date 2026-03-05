@@ -1,12 +1,12 @@
 # Configuration file for AI DevOps Agent
 jira:
   url: "https://vertexinc.atlassian.net"
-  username: "your-username"
-  api_token: "your-api-token"
+  username: "tejakrishna.b@vertexinc.com"
+  api_token: "ATATT3xFfGF0QNCZMfsy5WCDZi1sF0_fsMrmtDUmTBmk-LIbMaPk0abfRtARW2pkUss4iuXYKC46NsCgKFaSrpfngbS00HhUM0J7IN_XQGegqOjAV6i9d7n7I1VUX6uqoRKhjDhEf0OivwR8z1r58paeRRjC9kvsKhUfwP8IhUnuZCO09sQSn9s=0FA8CFB5"
 git:
   provider: "github"
-  repo: "Tejakrishna-b/AI-Devops-Agent"
-  token: "your-github-token"
+  repo: "AI-Devops-Agent"
+  token: "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"
   owner: "Tejakrishna-b"
 sonarqube:
   url: "https://sonarqube.company.com"
