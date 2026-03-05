@@ -171,7 +171,7 @@ class AIDevOpsAgent:
             return [self.git_repo]
         return ["https://github.com/example/repo1.git"]
 
-    def generate_changes(self, analysis, requirements=None):
+    def generate_changes(self, analysis, requirements=None, issue_data=None):
         import os
         print(f"\n📝 Generating changes for {analysis.get('target', 'project')}...")
         
@@ -183,29 +183,50 @@ class AIDevOpsAgent:
         
         files_created = []
         
+        # Generate solution explanation document
+        if issue_data:
+            explanation_path = os.path.join(workspace_dir, "SOLUTION_EXPLANATION.md")
+            with open(explanation_path, "w") as f:
+                f.write(self.generate_solution_explanation(issue_data, requirements, analysis))
+            files_created.append(explanation_path)
+            print(f"   ✅ Created: {explanation_path}")
+        
         # Generate code based on requirements
         if requirements:
             print(f"\n🔨 Generating code based on {len(requirements)} requirements...")
             
-            # Create automation script
-            if any('automate' in req.lower() or 'test' in req.lower() for req in requirements):
+            # Extract context from issue
+            fields = issue_data.get('fields', {}) if issue_data else {}
+            summary = fields.get('summary', '').lower()
+            description = fields.get('description', '').lower()
+            
+            # Create automation script for automation/testing requirements
+            if any('automate' in req.lower() or 'test' in req.lower() or 'report' in req.lower() for req in requirements):
                 script_path = os.path.join(workspace_dir, "automation_script.py")
                 with open(script_path, "w") as f:
-                    f.write(self.generate_automation_script(requirements))
+                    f.write(self.generate_automation_script(requirements, summary, description))
                 files_created.append(script_path)
                 print(f"   ✅ Created: {script_path}")
+            
+            # Create centralized config for config management requirements
+            if 'config' in summary or 'configuration' in description:
+                config_path = os.path.join(workspace_dir, "centralized_config.py")
+                with open(config_path, "w") as f:
+                    f.write(self.generate_centralized_config(summary, description))
+                files_created.append(config_path)
+                print(f"   ✅ Created: {config_path}")
             
             # Create configuration file
             config_path = os.path.join(workspace_dir, "config.json")
             with open(config_path, "w") as f:
-                f.write(self.generate_config_file(requirements))
+                f.write(self.generate_config_file(requirements, summary))
             files_created.append(config_path)
             print(f"   ✅ Created: {config_path}")
             
             # Create README
             readme_path = os.path.join(workspace_dir, "README.md")
             with open(readme_path, "w") as f:
-                f.write(self.generate_readme(requirements, analysis))
+                f.write(self.generate_readme(requirements, analysis, issue_data))
             files_created.append(readme_path)
             print(f"   ✅ Created: {readme_path}")
         
@@ -307,7 +328,107 @@ class AIDevOpsAgent:
         print("Pull request created.")
         return True
 
-    def generate_automation_script(self, requirements):
+    def generate_solution_explanation(self, issue_data, requirements, analysis):
+        """Generate detailed explanation of the issue and solution"""
+        fields = issue_data.get('fields', {})
+        issue_key = issue_data.get('key', 'N/A')
+        summary = fields.get('summary', 'N/A')
+        description = fields.get('description', 'N/A')
+        priority = fields.get('priority', {}).get('name', 'N/A')
+        status = fields.get('status', {}).get('name', 'N/A')
+        
+        return f"""# Solution Explanation for {issue_key}
+
+## Issue Summary
+**Jira Ticket**: [{issue_key}](https://vertexinc.atlassian.net/browse/{issue_key})
+**Title**: {summary}
+**Priority**: {priority}
+**Status**: {status}
+
+## Problem Statement
+{description}
+
+## Root Cause Analysis
+Based on the Jira ticket analysis, the key problems identified are:
+{chr(10).join(f'{i+1}. {req}' for i, req in enumerate(requirements))}
+
+## Solution Approach
+
+### Architecture Overview
+This solution implements an automated approach to address the issues identified in the Jira ticket.
+
+### Key Components
+1. **Automation Scripts**: Handle the automated workflow
+2. **Configuration Management**: Centralized configuration to eliminate duplication
+3. **Infrastructure Code**: Terraform for provisioning and managing infrastructure
+4. **Documentation**: Complete setup and usage instructions
+
+### Implementation Details
+
+#### 1. Centralized Configuration
+- Eliminates duplicate configuration across different environments
+- Single source of truth for all configuration data
+- Easy to maintain and update
+
+#### 2. Automated Testing
+- Ensures all components work as expected
+- Unified report format for consistency
+- Reduces manual testing effort
+
+#### 3. Infrastructure as Code
+- Version-controlled infrastructure
+- Repeatable deployments
+- Easy rollback capabilities
+
+## How This Fixes the Issue
+
+### Before
+- Configuration scattered across multiple files
+- Manual processes prone to errors
+- Difficult to maintain and update
+- No standardization
+
+### After
+- Centralized configuration management
+- Automated workflows
+- Standardized processes
+- Easy to maintain and scale
+
+## Testing Strategy
+1. Unit tests for individual components
+2. Integration tests for end-to-end workflows
+3. Configuration validation
+4. Infrastructure deployment tests
+
+## Deployment Plan
+1. Review generated code and configuration
+2. Run automated tests
+3. Deploy to staging environment
+4. Verify functionality
+5. Deploy to production
+6. Monitor for issues
+
+## Validation Criteria
+- [ ] All tests pass successfully
+- [ ] Configuration is centralized and accessible
+- [ ] Infrastructure provisions correctly
+- [ ] Documentation is complete
+- [ ] No regressions in existing functionality
+
+## Next Steps
+1. Review this solution with the team
+2. Test in development environment
+3. Address any feedback
+4. Deploy to staging
+5. Final validation before production
+
+## Support
+For questions or issues, refer to the original Jira ticket or contact the DevOps team.
+
+Generated by AI DevOps Agent on {analysis.get('timestamp', '2026-03-05')}
+"""
+
+    def generate_automation_script(self, requirements, summary="", description=""):
         """Generate Python automation script based on requirements"""
         script = f"""#!/usr/bin/env python3
 \"\"\"
@@ -373,11 +494,99 @@ if __name__ == "__main__":
 """
         return script
 
-    def generate_config_file(self, requirements):
+    def generate_centralized_config(self, summary, description):
+        """Generate centralized configuration management system"""
+        return f"""#!/usr/bin/env python3
+\"\"\"
+Centralized Configuration Management System
+Generated by AI DevOps Agent
+
+Purpose: {summary}
+\"\"\"
+
+import json
+import os
+from typing import Dict, Any, Optional
+from pathlib import Path
+
+class ConfigurationManager:
+    \"\"\"Centralized configuration manager for Solution Tests\"\"\"
+    
+    def __init__(self, config_dir: str = "configs"):
+        self.config_dir = Path(config_dir)
+        self.config_dir.mkdir(exist_ok=True)
+        self.configs = {{}}
+        self.load_all_configs()
+    
+    def load_all_configs(self):
+        \"\"\"Load all configuration files from the config directory\"\"\"
+        config_files = self.config_dir.glob("*.json")
+        for config_file in config_files:
+            config_name = config_file.stem
+            with open(config_file, 'r') as f:
+                self.configs[config_name] = json.load(f)
+        print(f"Loaded {{len(self.configs)}} configuration(s)")
+    
+    def get_config(self, config_name: str) -> Optional[Dict[str, Any]]:
+        \"\"\"Retrieve configuration by name\"\"\"
+        return self.configs.get(config_name)
+    
+    def save_config(self, config_name: str, config_data: Dict[str, Any]):
+        \"\"\"Save configuration to file\"\"\"
+        config_path = self.config_dir / f"{{config_name}}.json"
+        with open(config_path, 'w') as f:
+            json.dump(config_data, f, indent=2)
+        self.configs[config_name] = config_data
+        print(f"Saved configuration: {{config_name}}")
+    
+    def get_taxpayer_config(self, taxpayer_id: str) -> Optional[Dict[str, Any]]:
+        \"\"\"Get taxpayer-specific configuration\"\"\"
+        taxpayer_configs = self.get_config("taxpayers")
+        if taxpayer_configs:
+            return taxpayer_configs.get(taxpayer_id)
+        return None
+    
+    def get_environment_config(self, env_name: str) -> Optional[Dict[str, Any]]:
+        \"\"\"Get environment-specific configuration\"\"\"
+        env_configs = self.get_config("environments")
+        if env_configs:
+            return env_configs.get(env_name)
+        return None
+    
+    def get_product_config(self, product_name: str) -> Optional[Dict[str, Any]]:
+        \"\"\"Get product-specific configuration\"\"\"
+        product_configs = self.get_config("products")
+        if product_configs:
+            return product_configs.get(product_name)
+        return None
+
+if __name__ == "__main__":
+    # Example usage
+    config_manager = ConfigurationManager()
+    
+    # Create sample configurations
+    sample_environments = {{
+        "dev": {{"url": "https://dev.example.com", "timeout": 30}},
+        "staging": {{"url": "https://staging.example.com", "timeout": 30}},
+        "prod": {{"url": "https://prod.example.com", "timeout": 60}}
+    }}
+    config_manager.save_config("environments", sample_environments)
+    
+    sample_taxpayers = {{
+        "taxpayer1": {{"id": "001", "name": "Test Corp", "jurisdiction": "US"}},
+        "taxpayer2": {{"id": "002", "name": "Demo Inc", "jurisdiction": "CA"}}
+    }}
+    config_manager.save_config("taxpayers", sample_taxpayers)
+    
+    print("\nCentralized Configuration Management System initialized!")
+    print(f"Configuration directory: {{config_manager.config_dir.absolute()}}")
+\"\"\"
+
+    def generate_config_file(self, requirements, summary=""):
         """Generate configuration file"""
         import json
         config = {
-            "project": "Solution Reporting Automation",
+            "project": summary or "Solution Implementation",
             "version": "1.0.0",
             "requirements": requirements,
             "settings": {
@@ -391,9 +600,20 @@ if __name__ == "__main__":
         }
         return json.dumps(config, indent=2)
     
-    def generate_readme(self, requirements, analysis):
+    def generate_readme(self, requirements, analysis, issue_data=None):
         """Generate README documentation"""
-        return f"""# Automated Solution Implementation
+        issue_key = issue_data.get('key', 'N/A') if issue_data else 'N/A'
+        fields = issue_data.get('fields', {}) if issue_data else {}
+        summary = fields.get('summary', 'N/A')
+        
+        return f"""# Automated Solution Implementation - {issue_key}
+
+## Jira Ticket
+- **ID**: {issue_key}
+- **Summary**: {summary}
+- **Link**: [View in Jira](https://vertexinc.atlassian.net/browse/{issue_key})
+
+## Automated Solution Implementation
 
 ## Overview
 This workspace contains the automated solution generated by AI DevOps Agent.
@@ -560,6 +780,7 @@ echo "Backup location: $backup_dir"
         
         requirements = None
         issue_key = None
+        issue_data = None
         
         # If Jira ticket, fetch and explain it first
         if "jira" in analysis:
@@ -577,6 +798,7 @@ echo "Backup location: $backup_dir"
             else:
                 print("\n⚠️  Could not fetch Jira details, proceeding with prompt analysis...\n")
                 requirements = None
+                issue_data = None
         
         print("\n🔄 Starting automated DevOps workflow...\n")
         repos = self.locate_repositories()
@@ -584,8 +806,8 @@ echo "Backup location: $backup_dir"
             # Create branch with issue key if available
             branch = self.create_branch(repo, issue_key)
             
-            # Generate actual code files
-            generated_files = self.generate_changes(analysis, requirements)
+            # Generate actual code files with full context
+            generated_files = self.generate_changes(analysis, requirements, issue_data)
             
             # Add generated files to git
             if generated_files and self.add_code(repo, branch, generated_files):
