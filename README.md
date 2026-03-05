@@ -26,3 +26,22 @@ See docs/workflow.md for details.
 
 ---
 This is a starter template. Expand features as needed.
+
+
+User / Jira Ticket
+        ↓
+AI DevOps Agent
+        ↓
+Task Planner
+        ↓
+Code Generator
+        ↓
+Infrastructure Generator
+        ↓
+GitHub Integration
+        ↓
+Pull Request Creation
+        ↓
+CI/CD Pipeline
+        ↓
+Deployment
