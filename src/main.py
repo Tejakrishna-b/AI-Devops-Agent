@@ -3,13 +3,17 @@ import sys
 class AIDevOpsAgent:
     def __init__(self):
         import yaml
-        with open("config/config.yaml", "r") as f:
+        import os
+        config_path = os.path.join(os.path.dirname(__file__), "..", "config", "config.yaml")
+        with open(config_path, "r") as f:
             config = yaml.safe_load(f)
         self.jira_url = config["jira"]["url"]
         self.jira_username = config["jira"]["username"]
         self.jira_token = config["jira"]["api_token"]
         self.git_provider = config["git"]["provider"]
         self.git_repo = config["git"]["repo"]
+        self.git_token = config["git"].get("token")
+        self.git_owner = config["git"].get("owner")
         self.sonarqube_url = config["sonarqube"]["url"]
         self.sonarqube_token = config["sonarqube"]["token"]
         self.software_targets = ["SonarQube", "OtherSoftware"]
@@ -27,17 +31,51 @@ class AIDevOpsAgent:
 
     def create_github_branch(self, branch_name):
         import requests
-        # This is a stub for GitHub branch creation
-        print(f"Creating GitHub branch: {branch_name} in repo {self.git_repo}")
-        # You would use GitHub API here
-        return True
+        if not self.git_token:
+            print(f"[SIMULATION] Creating GitHub branch: {branch_name} in repo {self.git_repo}")
+            print("Note: Add GitHub token to config.yaml for real API calls")
+            return True
+        
+        # Get the default branch SHA
+        url = f"https://api.github.com/repos/{self.git_owner}/{self.git_repo.split('/')[-1]}/git/refs/heads/main"
+        headers = {"Authorization": f"token {self.git_token}", "Accept": "application/vnd.github.v3+json"}
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code == 200:
+            sha = response.json()["object"]["sha"]
+            # Create new branch
+            create_url = f"https://api.github.com/repos/{self.git_owner}/{self.git_repo.split('/')[-1]}/git/refs"
+            data = {"ref": f"refs/heads/{branch_name}", "sha": sha}
+            create_response = requests.post(create_url, json=data, headers=headers)
+            if create_response.status_code == 201:
+                print(f"✅ Created GitHub branch: {branch_name}")
+                return True
+            else:
+                print(f"❌ Failed to create branch: {create_response.text}")
+                return False
+        else:
+            print(f"❌ Failed to get main branch: {response.text}")
+            return False
 
     def create_github_pr(self, branch_name, title, body):
         import requests
-        # This is a stub for GitHub PR creation
-        print(f"Creating GitHub PR from branch {branch_name}: {title}")
-        # You would use GitHub API here
-        return True
+        if not self.git_token:
+            print(f"[SIMULATION] Creating GitHub PR from branch {branch_name}: {title}")
+            print("Note: Add GitHub token to config.yaml for real API calls")
+            return True
+        
+        url = f"https://api.github.com/repos/{self.git_owner}/{self.git_repo.split('/')[-1]}/pulls"
+        headers = {"Authorization": f"token {self.git_token}", "Accept": "application/vnd.github.v3+json"}
+        data = {"title": title, "body": body, "head": branch_name, "base": "main"}
+        response = requests.post(url, json=data, headers=headers)
+        
+        if response.status_code == 201:
+            pr_url = response.json()["html_url"]
+            print(f"✅ Created Pull Request: {pr_url}")
+            return pr_url
+        else:
+            print(f"❌ Failed to create PR: {response.text}")
+            return None
 
     def analyze_prompt(self, prompt):
         print(f"Analyzing prompt: {prompt}")
