@@ -123,5 +123,9 @@ class AIDevOpsAgent:
 
 if __name__ == "__main__":
     agent = AIDevOpsAgent()
-    test_prompt = "Upgrade SonarQube to version 9.9 and create infrastructure."
-    agent.run_workflow(test_prompt)
+    import sys
+    if len(sys.argv) > 1:
+        user_prompt = sys.argv[1]
+    else:
+        user_prompt = input("Enter your prompt or Jira link: ")
+    agent.run_workflow(user_prompt)
