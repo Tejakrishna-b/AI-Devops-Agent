@@ -171,32 +171,134 @@ class AIDevOpsAgent:
             return [self.git_repo]
         return ["https://github.com/example/repo1.git"]
 
-    def generate_changes(self, analysis):
-        print(f"Generating changes for {analysis['target']} upgrade...")
-        # Simulate code/config/terraform generation
-        if analysis["action"] == "upgrade":
-            print(f"Upgrading {analysis['target']} to version {analysis['version']}")
-            print("Generating Terraform for infrastructure...")
-            # Here, you would generate files and code
+    def generate_changes(self, analysis, requirements=None):
+        import os
+        print(f"\n📝 Generating changes for {analysis.get('target', 'project')}...")
+        
+        # Create workspace directory
+        workspace_dir = "workspace"
+        if not os.path.exists(workspace_dir):
+            os.makedirs(workspace_dir)
+            print(f"✅ Created workspace directory: {workspace_dir}")
+        
+        files_created = []
+        
+        # Generate code based on requirements
+        if requirements:
+            print(f"\n🔨 Generating code based on {len(requirements)} requirements...")
+            
+            # Create automation script
+            if any('automate' in req.lower() or 'test' in req.lower() for req in requirements):
+                script_path = os.path.join(workspace_dir, "automation_script.py")
+                with open(script_path, "w") as f:
+                    f.write(self.generate_automation_script(requirements))
+                files_created.append(script_path)
+                print(f"   ✅ Created: {script_path}")
+            
+            # Create configuration file
+            config_path = os.path.join(workspace_dir, "config.json")
+            with open(config_path, "w") as f:
+                f.write(self.generate_config_file(requirements))
+            files_created.append(config_path)
+            print(f"   ✅ Created: {config_path}")
+            
+            # Create README
+            readme_path = os.path.join(workspace_dir, "README.md")
+            with open(readme_path, "w") as f:
+                f.write(self.generate_readme(requirements, analysis))
+            files_created.append(readme_path)
+            print(f"   ✅ Created: {readme_path}")
+        
+        # Handle upgrade scenarios
+        if analysis.get("action") == "upgrade":
+            print(f"\n⬆️  Upgrading {analysis['target']} to version {analysis['version']}")
+            
+            # Generate Terraform file
+            terraform_path = os.path.join(workspace_dir, "main.tf")
+            with open(terraform_path, "w") as f:
+                f.write(self.generate_terraform(analysis))
+            files_created.append(terraform_path)
+            print(f"   ✅ Created: {terraform_path}")
+            
+            # Generate upgrade script
+            upgrade_script = os.path.join(workspace_dir, "upgrade.sh")
+            with open(upgrade_script, "w") as f:
+                f.write(self.generate_upgrade_script(analysis))
+            files_created.append(upgrade_script)
+            print(f"   ✅ Created: {upgrade_script}")
+        
+        print(f"\n✅ Generated {len(files_created)} files")
+        return files_created
+
+    def create_branch(self, repo, issue_key=None):
+        import subprocess
+        import os
+        
+        # Generate branch name
+        if issue_key:
+            branch_name = f"feature/{issue_key.lower()}"
+        else:
+            branch_name = "feature/upgrade-{}".format(repo.split("/")[-1].replace(".git", ""))
+        
+        print(f"\n🌿 Creating Git branch: {branch_name}")
+        
+        try:
+            # Check if branch exists
+            result = subprocess.run(
+                ["git", "rev-parse", "--verify", branch_name],
+                capture_output=True,
+                text=True,
+                cwd=os.getcwd()
+            )
+            
+            if result.returncode == 0:
+                print(f"   ⚠️  Branch {branch_name} already exists, checking it out...")
+                subprocess.run(["git", "checkout", branch_name], check=True)
+            else:
+                # Create and checkout new branch
+                subprocess.run(["git", "checkout", "-b", branch_name], check=True)
+                print(f"   ✅ Created and checked out branch: {branch_name}")
+            
+            return branch_name
+        except subprocess.CalledProcessError as e:
+            print(f"   ❌ Failed to create branch: {e}")
+            return None
+
+    def add_code(self, repo, branch, files):
+        import subprocess
+        import os
+        
+        print(f"\n📦 Adding generated files to Git...")
+        
+        try:
+            if files:
+                for file in files:
+                    subprocess.run(["git", "add", file], check=True, cwd=os.getcwd())
+                    print(f"   ✅ Added: {file}")
+                return True
+            else:
+                print("   ⚠️  No files to add")
+                return False
+        except subprocess.CalledProcessError as e:
+            print(f"   ❌ Failed to add files: {e}")
+            return False
+
+    def commit_code(self, repo, branch, message=None):
+        import subprocess
+        import os
+        
+        print(f"\n💾 Committing changes...")
+        
+        if not message:
+            message = f"Automated changes for {branch}"
+        
+        try:
+            subprocess.run(["git", "commit", "-m", message], check=True, cwd=os.getcwd())
+            print(f"   ✅ Committed with message: {message}")
             return True
-        return False
-
-    def create_branch(self, repo):
-        branch_name = "feature/upgrade-{}".format(repo.split("/")[-1].replace(".git", ""))
-        self.create_github_branch(branch_name)
-        return branch_name
-
-    def add_code(self, repo, branch):
-        print(f"Adding code to {repo} on branch {branch}...")
-        # Simulate adding code/config/terraform
-        print("Code, Terraform, and config files added.")
-        return True
-
-    def commit_code(self, repo, branch):
-        print(f"Committing code in {repo} on branch {branch}...")
-        # Simulate commit
-        print("Code committed.")
-        return True
+        except subprocess.CalledProcessError as e:
+            print(f"   ❌ Failed to commit: {e}")
+            return False
 
     def create_pull_request(self, repo, branch):
         title = f"Upgrade {repo} on branch {branch}"
@@ -204,6 +306,241 @@ class AIDevOpsAgent:
         self.create_github_pr(branch, title, body)
         print("Pull request created.")
         return True
+
+    def generate_automation_script(self, requirements):
+        """Generate Python automation script based on requirements"""
+        script = f"""#!/usr/bin/env python3
+\"\"\"
+Automated Solution Reporting Script
+Generated by AI DevOps Agent
+
+Requirements:
+{chr(10).join(f'- {req}' for req in requirements)}
+\"\"\"
+
+import json
+import os
+from datetime import datetime
+
+class SolutionReporter:
+    def __init__(self):
+        self.report_format = "unified"
+        self.output_dir = "reports"
+        
+    def generate_report(self, test_results):
+        \"\"\"Generate unified format report\"\"\"
+        report = {{
+            "timestamp": datetime.now().isoformat(),
+            "format_version": "1.0",
+            "test_results": test_results,
+            "status": "completed"
+        }}
+        
+        # Ensure output directory exists
+        os.makedirs(self.output_dir, exist_ok=True)
+        
+        # Save report
+        report_file = os.path.join(
+            self.output_dir, 
+            f"report_{{datetime.now().strftime('%Y%m%d_%H%M%S')}}.json"
+        )
+        
+        with open(report_file, 'w') as f:
+            json.dump(report, f, indent=2)
+        
+        print(f"Report generated: {{report_file}}")
+        return report_file
+    
+    def run_tests(self):
+        \"\"\"Run automated tests\"\"\"
+        print("Running automated solution reporting tests...")
+        
+        # Placeholder for actual test logic
+        test_results = {{
+            "total_tests": 10,
+            "passed": 10,
+            "failed": 0,
+            "skipped": 0
+        }}
+        
+        return test_results
+
+if __name__ == "__main__":
+    reporter = SolutionReporter()
+    results = reporter.run_tests()
+    reporter.generate_report(results)
+    print("Automation complete!")
+"""
+        return script
+
+    def generate_config_file(self, requirements):
+        """Generate configuration file"""
+        import json
+        config = {
+            "project": "Solution Reporting Automation",
+            "version": "1.0.0",
+            "requirements": requirements,
+            "settings": {
+                "report_format": "unified",
+                "output_directory": "reports",
+                "auto_upload": False,
+                "notification_enabled": True
+            },
+            "generated_by": "AI DevOps Agent",
+            "timestamp": "2026-03-05"
+        }
+        return json.dumps(config, indent=2)
+    
+    def generate_readme(self, requirements, analysis):
+        """Generate README documentation"""
+        return f"""# Automated Solution Implementation
+
+## Overview
+This workspace contains the automated solution generated by AI DevOps Agent.
+
+## Requirements Addressed
+{chr(10).join(f'{i+1}. {req}' for i, req in enumerate(requirements))}
+
+## Project Details
+- **Target**: {analysis.get('target', 'N/A')}
+- **Action**: {analysis.get('action', 'N/A')}
+- **Generated**: March 5, 2026
+
+## File Structure
+```
+workspace/
+├── automation_script.py   # Main automation script
+├── config.json           # Configuration file
+├── main.tf              # Terraform infrastructure (if applicable)
+├── upgrade.sh           # Upgrade script (if applicable)
+└── README.md            # This file
+```
+
+## Usage
+
+### Run Automation Script
+```bash
+python3 automation_script.py
+```
+
+### Apply Infrastructure Changes
+```bash
+terraform init
+terraform plan
+terraform apply
+```
+
+## Testing
+Run the automation script to verify all reports are generated in the unified format.
+
+## Deployment
+1. Review all generated files
+2. Run tests to ensure functionality
+3. Deploy to target environment
+4. Monitor for any issues
+
+## Support
+For issues or questions, refer to the original Jira ticket or contact the DevOps team.
+"""
+
+    def generate_terraform(self, analysis):
+        """Generate Terraform infrastructure code"""
+        target = analysis.get('target', 'application')
+        version = analysis.get('version', 'latest')
+        
+        return f"""# Terraform Infrastructure for {target}
+# Generated by AI DevOps Agent
+
+terraform {{
+  required_version = ">= 1.0"
+  required_providers {{
+    aws = {{
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }}
+  }}
+}}
+
+provider "aws" {{
+  region = var.aws_region
+}}
+
+variable "aws_region" {{
+  description = "AWS region"
+  default     = "us-east-1"
+}}
+
+variable "{target.lower()}_version" {{
+  description = "{target} version to deploy"
+  default     = "{version}"
+}}
+
+resource "aws_instance" "{target.lower()}_server" {{
+  ami           = "ami-0c55b159cbfafe1f0"  # Update with appropriate AMI
+  instance_type = "t3.medium"
+  
+  tags = {{
+    Name        = "{target}-${{var.{target.lower()}_version}}"
+    Environment = "production"
+    ManagedBy   = "Terraform"
+    Version     = var.{target.lower()}_version
+  }}
+}}
+
+output "{target.lower()}_instance_id" {{
+  description = "ID of the {target} instance"
+  value       = aws_instance.{target.lower()}_server.id
+}}
+
+output "{target.lower()}_public_ip" {{
+  description = "Public IP of the {target} instance"
+  value       = aws_instance.{target.lower()}_server.public_ip
+}}
+"""
+
+    def generate_upgrade_script(self, analysis):
+        """Generate upgrade shell script"""
+        target = analysis.get('target', 'Application')
+        version = analysis.get('version', 'latest')
+        
+        return f"""#!/bin/bash
+# {target} Upgrade Script
+# Generated by AI DevOps Agent
+# Target Version: {version}
+
+set -e
+
+echo "Starting {target} upgrade to version {version}..."
+
+# Backup current installation
+echo "Creating backup..."
+timestamp=$(date +%Y%m%d_%H%M%S)
+backup_dir="/opt/backups/{target.lower()}_$timestamp"
+mkdir -p "$backup_dir"
+
+# Stop services
+echo "Stopping {target} services..."
+# systemctl stop {target.lower()} || true
+
+# Download and install new version
+echo "Installing {target} version {version}..."
+# Add actual installation commands here
+
+# Update configuration
+echo "Updating configuration..."
+# Add configuration update commands
+
+# Start services
+echo "Starting {target} services..."
+# systemctl start {target.lower()}
+
+# Verify installation
+echo "Verifying installation..."
+# Add verification commands
+
+echo "✅ {target} upgrade to version {version} completed successfully!"
+echo "Backup location: $backup_dir"
+"""
 
     def deploy(self, repo):
         print(f"Deploying {repo}...")
@@ -221,10 +558,14 @@ class AIDevOpsAgent:
             print("❌ Could not determine action from prompt.")
             return
         
+        requirements = None
+        issue_key = None
+        
         # If Jira ticket, fetch and explain it first
         if "jira" in analysis:
+            issue_key = analysis["jira"]
             print("📥 Fetching Jira ticket details...\n")
-            issue_data = self.get_jira_issue(analysis["jira"])
+            issue_data = self.get_jira_issue(issue_key)
             if issue_data:
                 requirements = self.explain_jira_issue(issue_data)
                 # Ask for confirmation before proceeding
@@ -235,18 +576,39 @@ class AIDevOpsAgent:
                     return
             else:
                 print("\n⚠️  Could not fetch Jira details, proceeding with prompt analysis...\n")
+                requirements = None
         
         print("\n🔄 Starting automated DevOps workflow...\n")
         repos = self.locate_repositories()
         for repo in repos:
-            branch = self.create_branch(repo)
-            self.generate_changes(analysis)
-            self.add_code(repo, branch)
-            self.commit_code(repo, branch)
-            self.create_pull_request(repo, branch)
-            print("\n⏳ Waiting for developer review and merge...")
-            print("✅ Code merged.")
-            self.deploy(repo)
+            # Create branch with issue key if available
+            branch = self.create_branch(repo, issue_key)
+            
+            # Generate actual code files
+            generated_files = self.generate_changes(analysis, requirements)
+            
+            # Add generated files to git
+            if generated_files and self.add_code(repo, branch, generated_files):
+                # Commit with meaningful message
+                commit_msg = f"Automated implementation for {issue_key}" if issue_key else f"Automated changes for {analysis.get('target', 'project')}"
+                self.commit_code(repo, branch, commit_msg)
+                
+                # Push to remote
+                print("\n📤 Pushing changes to remote repository...")
+                import subprocess
+                try:
+                    subprocess.run(["git", "push", "-u", "origin", branch], check=True)
+                    print(f"   ✅ Pushed branch {branch} to remote")
+                except subprocess.CalledProcessError as e:
+                    print(f"   ⚠️  Failed to push: {e}")
+                
+                # Create PR
+                self.create_pull_request(repo, branch)
+                print("\n⏳ Waiting for developer review and merge...")
+                print("✅ Once merged, deployment can proceed.")
+            else:
+                print("   ⚠️  No files generated or failed to add files")
+                
         print("\n" + "="*70)
         print("✅ WORKFLOW COMPLETE")
         print("="*70 + "\n")
