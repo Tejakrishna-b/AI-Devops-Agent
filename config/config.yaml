@@ -1,0 +1,11 @@
+# Configuration file for AI DevOps Agent
+jira:
+  url: "https://yourcompany.atlassian.net"
+  username: "your-username"
+  api_token: "your-api-token"
+git:
+  provider: "github"
+  repo: "your-repo"
+sonarqube:
+  url: "https://sonarqube.company.com"
+  token: "your-sonarqube-token"
