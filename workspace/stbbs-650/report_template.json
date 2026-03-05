@@ -1,0 +1,97 @@
+{
+  "metadata": {
+    "report_id": "GENERATE_UUID_HERE",
+    "report_version": "1.0",
+    "generated_at": "ISO_8601_TIMESTAMP",
+    "generator": {
+      "name": "YourTestFramework",
+      "version": "1.0.0"
+    },
+    "environment": {
+      "name": "dev|staging|prod",
+      "host": "hostname",
+      "os": "Operating System"
+    },
+    "test_suite": {
+      "name": "Your Test Suite Name",
+      "version": "1.0.0",
+      "tags": ["smoke", "regression"]
+    }
+  },
+  "summary": {
+    "total_tests": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "duration_ms": 0,
+    "start_time": "ISO_8601_TIMESTAMP",
+    "end_time": "ISO_8601_TIMESTAMP",
+    "success_rate": 0.0,
+    "status": "PASSED|FAILED|ERROR"
+  },
+  "test_results": [
+    {
+      "test_id": "unique_test_identifier",
+      "test_name": "Human readable test name",
+      "description": "What this test verifies",
+      "status": "PASSED",
+      "duration_ms": 1250,
+      "start_time": "ISO_8601_TIMESTAMP",
+      "end_time": "ISO_8601_TIMESTAMP",
+      "assertions": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0
+      },
+      "tags": ["authentication", "smoke"],
+      "category": "functional",
+      "severity": "critical",
+      "failure_details": {
+        "message": "Error message if test failed",
+        "stack_trace": "Full stack trace",
+        "screenshot": "path/to/screenshot.png",
+        "logs": "Relevant log excerpts"
+      },
+      "retry_count": 0,
+      "flaky": false
+    }
+  ],
+  "coverage": {
+    "line_coverage": 85.5,
+    "branch_coverage": 78.3,
+    "function_coverage": 92.1,
+    "covered_lines": 8550,
+    "total_lines": 10000,
+    "report_path": "coverage/index.html"
+  },
+  "performance": {
+    "average_response_time_ms": 250,
+    "max_response_time_ms": 1500,
+    "min_response_time_ms": 50,
+    "p95_response_time_ms": 800,
+    "p99_response_time_ms": 1200
+  },
+  "artifacts": {
+    "screenshots": [],
+    "videos": [],
+    "logs": [],
+    "reports": {
+      "html": "path/to/report.html",
+      "json": "path/to/report.json",
+      "xml": "path/to/report.xml"
+    }
+  },
+  "integration": {
+    "ci_system": "Jenkins|GitLab|GitHub Actions",
+    "build_id": "12345",
+    "build_url": "https://ci.example.com/build/12345",
+    "commit": {
+      "sha": "abc123def456",
+      "branch": "main",
+      "author": "developer@example.com",
+      "message": "Commit message",
+      "timestamp": "ISO_8601_TIMESTAMP"
+    }
+  }
+}
