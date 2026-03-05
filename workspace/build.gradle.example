@@ -1,0 +1,49 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.springframework.boot' version '3.2.0' // if using Spring Boot
+}
+
+group = 'com.example'
+version = '1.0.0'
+
+java {
+    // Set Java 21 for compilation
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+    
+    // Enable toolchain support for better Java version management
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Spring Boot (if applicable)
+    implementation 'org.springframework.boot:spring-boot-starter:3.2.0'
+    
+    // Testing
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+    // Uncomment if using preview features
+    // options.compilerArgs += '--enable-preview'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    
+    // Uncomment if using preview features in tests
+    // jvmArgs += '--enable-preview'
+}
+
+application {
+    mainClass = 'com.example.Main'
+}
