@@ -16,7 +16,7 @@ class AIDevOpsAgent:
         self.git_owner = config["git"].get("owner")
         self.sonarqube_url = config["sonarqube"]["url"]
         self.sonarqube_token = config["sonarqube"]["token"]
-        self.software_targets = ["SonarQube", "OtherSoftware"]
+        self.software_targets = ["SonarQube", "Java", "Python", "Node", "NodeJS", ".NET", "Docker", "Kubernetes", "Maven", "Gradle"]
     def get_jira_issue(self, issue_key):
         import requests
         url = f"{self.jira_url}/rest/api/2/issue/{issue_key}"
