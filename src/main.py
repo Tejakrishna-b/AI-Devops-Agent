@@ -157,6 +157,11 @@ class AIDevOpsAgent:
                 "software": "Node.js"
             }
         
+        # Detect greeting / casual input
+        greeting_patterns = r'^\s*(hi|hello|hey|good\s+morning|good\s+afternoon|good\s+evening|howdy|greetings|what\'?s\s+up|sup)\b'
+        if re.search(greeting_patterns, prompt, re.IGNORECASE):
+            return {"type": "greeting", "prompt": prompt}
+
         return {"type": "unknown", "prompt": prompt}
 
     def create_branch(self, task_info):
@@ -2562,6 +2567,18 @@ class ConfigurationManager:
         # Analyze the prompt to understand the task
         task_info = self.analyze_prompt(prompt)
         
+        if task_info["type"] == "greeting":
+            print(f"👋 Hello! Good to hear from you!")
+            print("\n🤖 I'm your AI DevOps Agent. Here's what I can help you with:")
+            print("\n💡 Supported tasks:")
+            print("   - Upgrade Java from X to Y")
+            print("   - Upgrade Python from X to Y")
+            print("   - Upgrade Node.js from X to Y")
+            print("   - Upgrade SonarQube to version X")
+            print("   - jira: ISSUE-KEY  (fetch & automate a Jira ticket)")
+            print("\nJust type your request and I'll get started! 🚀")
+            return
+
         if task_info["type"] == "unknown":
             print(f"❌ Could not determine action from prompt: {prompt}")
             print("\n💡 Supported tasks:")
