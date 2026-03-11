@@ -1,13 +1,27 @@
-# Configuration file for AI DevOps Agent
+# Configuration file for AI DevOps Upgrade Agent
+# Sensitive values should be set via environment variables:
+#   JIRA_URL, JIRA_USERNAME, JIRA_API_TOKEN
+#   GITHUB_TOKEN
+#   OPENAI_API_KEY
+#   SONARQUBE_TOKEN
+
 jira:
-  url: "https://vertexinc.atlassian.net"
-  username: "tejakrishna.b@vertexinc.com"
-  api_token: "ATATT3xFfGF0QNCZMfsy5WCDZi1sF0_fsMrmtDUmTBmk-LIbMaPk0abfRtARW2pkUss4iuXYKC46NsCgKFaSrpfngbS00HhUM0J7IN_XQGegqOjAV6i9d7n7I1VUX6uqoRKhjDhEf0OivwR8z1r58paeRRjC9kvsKhUfwP8IhUnuZCO09sQSn9s=0FA8CFB5"
+  url: "https://your-instance.atlassian.net"
+  username: "your-email@example.com"
+  api_token: ""  # Set JIRA_API_TOKEN env var instead
+
 git:
   provider: "github"
   repo: "AI-Devops-Agent"
-  token: "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"
-  owner: "Tejakrishna-b"
+  token: ""  # Set GITHUB_TOKEN env var instead
+  owner: "your-github-owner"
+
 sonarqube:
   url: "https://sonarqube.company.com"
-  token: "your-sonarqube-token"
+  token: ""  # Set SONARQUBE_TOKEN env var instead
+
+openai:
+  api_key: ""  # Set OPENAI_API_KEY env var instead
+  model: "gpt-4"
+
+workspace_dir: "workspace"

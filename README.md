@@ -1,314 +1,99 @@
-# AI DevOps Agent
+# AI DevOps Upgrade Agent
 
-This project is an AI-powered DevOps agent that automates software upgrades, reads Jira tickets, manages Git branches and PRs, and generates Terraform code for infrastructure provisioning.
+An AI-powered DevOps automation agent that upgrades tools in CI/CD pipelines by analyzing repository code, updating versions, validating changes, and creating pull requests.
 
 ## Features
-- Automate SonarQube/software upgrades
-- Read and analyze Jira tickets
-- Manage Git branches, commits, and pull requests
-- Generate Terraform code for infrastructure
-- End-to-end workflow automation
+
+- **Automated Upgrades** — SonarQube, Snyk, Datadog, Terraform, Docker
+- **Repository Scanning** — Detects version references in `.tf`, YAML, Dockerfiles, Helm charts
+- **AI Code Generation** — OpenAI-powered code updates with validation pass
+- **Terraform Validation** — Runs `terraform fmt`, `validate`, and `plan`
+- **GitHub Integration** — Clones repos, creates branches & PRs via PyGithub
+- **Backup Snapshots** — Tags current HEAD before any modifications
+- **Jira Integration** — Reads tickets and generates implementation plans
+- **Streamlit UI** — Web dashboard with tool selection, version inputs, and live status panel
 
 ## Project Structure
-- `src/` — Agent source code
-- `infra/` — Infrastructure as code (Terraform)
-- `config/` — Configuration files
-- `tests/` — Test data and validation scripts
-- `docs/` — Documentation
 
-## Getting Started
-1. Install Python 3.10+
-2. Install dependencies: `pip install -r requirements.txt`
-3. Run the agent: `python src/main.py`
+```
+ai-devops-agent/
+├── app.py                  # Streamlit web UI
+├── agent.py                # DevOpsUpgradeAgent — core orchestrator
+├── prompts.py              # LLM prompt templates
+├── git_service.py          # Git operations (GitPython)
+├── terraform_service.py    # Terraform CLI wrapper
+├── llm_service.py          # OpenAI integration
+├── jira_service.py         # Jira REST API client
+├── validator.py            # Repository scanner & security checks
+├── config.py               # Configuration loader
+├── config/config.yaml      # Settings (credentials via env vars)
+├── requirements.txt        # Python dependencies
+├── src/main.py             # CLI entry point
+├── infra/main.tf           # Sample Terraform
+├── tests/test_workflow.py  # Tests
+└── workspace/              # Generated upgrade workspaces
+```
+
+## Quick Start
+
+### 1. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Set Environment Variables
+
+```bash
+export GITHUB_TOKEN="your-github-token"
+export JIRA_API_TOKEN="your-jira-token"
+export JIRA_URL="https://your-instance.atlassian.net"
+export JIRA_USERNAME="your-email@example.com"
+export OPENAI_API_KEY="your-openai-key"         # optional
+export SONARQUBE_TOKEN="your-sonarqube-token"    # optional
+```
+
+### 3. Run the Web UI
+
+```bash
+streamlit run app.py
+```
+
+### 4. Or Use the CLI
+
+```bash
+python3 src/main.py "Upgrade SonarQube from 9.9 to 10.3"
+python3 src/main.py "jira: STBBS-649"
+```
+
+## Upgrade Workflow
+
+1. **Parse Request** — Extract tool name, versions, repository
+2. **Clone Repository** — Pull the target repo locally
+3. **Backup Snapshot** — Tag current HEAD (`backup-sonarqube-9.9`)
+4. **Feature Branch** — Create `feature/upgrade-sonarqube-10.3`
+5. **Scan Code** — Find version references in `.tf`, YAML, Dockerfiles
+6. **Upgrade Code** — Replace versions (AI-assisted if OpenAI key set)
+7. **Terraform Validation** — `fmt` → `validate` → `plan`
+8. **Security Scan** — Check for hardcoded secrets
+9. **AI Validation** — Second LLM pass to verify correctness
+10. **Create PR** — Push branch and open pull request on GitHub
+11. **Human Approval** — Engineer reviews and merges
+
+## Technology Stack
+
+| Component | Technology |
+|---|---|
+| Language | Python 3.11+ |
+| UI | Streamlit |
+| AI | OpenAI API |
+| Git | GitPython |
+| GitHub | PyGithub |
+| IaC Validation | Terraform CLI |
+| HTTP | Requests |
+| Config | PyYAML, Pydantic |
+
+## Configuration
+
+Edit `config/config.yaml` for non-sensitive settings. All credentials should be provided via environment variables (see above).
 
-## Workflow
-See docs/workflow.md for details.
-
----
-This is a starter template. Expand features as needed.
-
-
-User / Jira Ticket
-        ↓
-AI DevOps Agent
-        ↓
-Task Planner
-        ↓
-Code Generator
-        ↓
-Infrastructure Generator
-        ↓
-GitHub Integration
-        ↓
-Pull Request Creation
-        ↓
-CI/CD Pipeline
-        ↓
-Deployment
-
-
-
-
-AI DevOps Automation Agent (High-Level Concept)
-Agent Name
-
-AutoDevOps AI Agent
-(or you could call it VIPER AI Engineer)
-
-Core Capabilities of the Agent
-
-The agent can automate four major tasks.
-
-1. Software Upgrade Automation
-
-Example:
-
-Upgrade SonarQube 9.5 → 10.2
-Upgrade Datadog Agent
-Upgrade Kubernetes Version
-Upgrade Terraform Modules
-How it Works
-
-User prompt:
-
-Upgrade SonarQube to latest version
-
-Agent actions:
-
-Detect current version
-
-Check compatibility
-
-Generate upgrade plan
-
-Update configuration files
-
-Create upgrade branch
-
-Run tests
-
-Raise PR
-
-Result
-
-Branch created
-sonarqube-upgrade-v10
-PR created automatically
-2. Jira Issue Automation
-
-The agent can read Jira tickets and implement tasks automatically.
-
-Example Jira Ticket:
-
-Upgrade SonarQube to v10
-Update Helm charts
-Add monitoring
-Agent Workflow
-
-Read Jira ticket
-
-Understand requirement using AI
-
-Identify affected repositories
-
-Generate required changes
-
-Create branch
-
-Implement changes
-
-Create Pull Request
-
-Example output
-
-Branch created: sonar-upgrade
-Files updated:
-helm-chart.yaml
-terraform.tf
-deployment.yaml
-3. Infrastructure Automation
-
-The agent can automatically create infrastructure code.
-
-Example prompt:
-
-Create infrastructure for SonarQube in AWS
-
-Agent generates:
-
-Terraform code
-VPC
-EKS
-RDS
-Load Balancer
-IAM roles
-
-Example Terraform generated:
-
-resource "aws_instance" "sonarqube" {
-  instance_type = "t3.large"
-}
-
-Agent commits this code to repo.
-
-4. Code Generation + Pull Request
-
-Agent automatically creates GitHub branches.
-
-Workflow:
-
-main branch
-     ↓
-AI creates new branch
-     ↓
-Generates code
-     ↓
-Pushes code
-     ↓
-Creates PR
-
-Example PR
-
-Title:
-Upgrade SonarQube to v10
-
-Changes:
-Updated helm chart
-Updated terraform module
-Updated config files
-
-After review and approval:
-
-PR merged
-Deployment triggered
-Complete Agent Workflow
-User Prompt / Jira Ticket
-          ↓
-AI DevOps Agent
-          ↓
-Analyze Requirement
-          ↓
-Locate Repositories
-          ↓
-Generate Changes
-          ↓
-Create Branch
-          ↓
-Add Code / Terraform / Config
-          ↓
-Commit Code
-          ↓
-Create Pull Request
-          ↓
-Developer Review
-          ↓
-Merge
-          ↓
-Automatic Deployment
-Tools the Agent Will Integrate
-Development Tools
-GitHub
-GitLab
-Bitbucket
-DevOps Tools
-Terraform
-Helm
-Kubernetes
-ArgoCD
-Monitoring Tools
-SonarQube
-Datadog
-Snyk
-Ticketing System
-Jira
-Cloud
-AWS
-Azure
-GCP
-Example Real Scenario
-Jira Ticket
-Upgrade SonarQube from v9 to v10
-Agent Execution
-1 Analyze Jira ticket
-2 Identify sonar infrastructure
-3 Generate upgrade steps
-4 Update Terraform
-5 Update Helm chart
-6 Update pipeline
-7 Create branch
-8 Push code
-9 Create PR
-
-Developer only reviews the PR.
-
-High Level Architecture
-User / Jira Ticket
-        ↓
-AI DevOps Agent
-        ↓
-Task Planner
-        ↓
-Code Generator
-        ↓
-Infrastructure Generator
-        ↓
-GitHub Integration
-        ↓
-Pull Request Creation
-        ↓
-CI/CD Pipeline
-        ↓
-Deployment
-Technologies to Build This
-AI
-OpenAI / Claude
-LangGraph
-CrewAI
-Backend
-Python
-FastAPI
-Spring Boot
-Integrations
-GitHub API
-Jira API
-SonarQube API
-Terraform CLI
-AWS SDK
-What Makes This Idea Powerful
-
-This agent would automate:
-
-Tool upgrades
-Infrastructure creation
-Code generation
-Pull request automation
-Jira ticket implementation
-
-Instead of engineers doing repetitive DevOps tasks, the AI agent does them automatically.
-
-One Important Advice
-
-Do NOT build everything at once.
-
-Start with this first version:
-
-Version 1 Agent
-
-Capabilities:
-
-Read Jira tickets
-Generate code changes
-Create GitHub branch
-Raise Pull Request
-Version 2
-
-Add:
-
-SonarQube upgrade automation
-Terraform generation
-Version 3
-
-Add:
-
-Full infrastructure provisioning
-Automatic deployments
