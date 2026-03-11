@@ -14,7 +14,7 @@ git:
   provider: "github"
   repo: "AI-Devops-Agent"
   token: ""  # Set GITHUB_TOKEN env var instead
-  owner: "your-github-owner"
+  owner: "Tejakrishna-b"
 
 sonarqube:
   url: "https://sonarqube.company.com"
